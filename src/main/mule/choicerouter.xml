@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="89d9462a-43cf-4d87-ac33-f79afc1a046b" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="choicerouterFlow" doc:id="168cced1-0301-48da-b458-d7363c53b002" >
+		<http:listener doc:name="Listener" doc:id="d40bc524-5e87-443a-ac0b-2dc8c56424b0" config-ref="HTTP_Listener_config" path="/choice"/>
+		<ee:transform doc:name="Transform Message" doc:id="fedb690f-0e85-412d-aeef-290204eae781" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="0ccff5f3-ecd7-4c84-9f10-830a7e8494d9" message="#[payload]"/>
+		<choice doc:name="Choice" doc:id="9e2e730c-93b5-48f9-8785-11b8d0e2fd7d" >
+			<when expression='#[(payload.location=="Mumbai")]'>
+				<logger level="INFO" doc:name="Logger" doc:id="df85ed07-48ec-4c52-8d34-2bad461cd332" message="It is the main condition"/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="07b92249-6d52-4e54-b9d6-7631f7bf854c" message="It is in the default condition"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="ea9933ee-bc65-4f64-b50b-0d266a23310f" message="#[payload.location]"/>
+	</flow>
+	<flow name="choicerouterFlow1" doc:id="43638ab5-14bd-4480-b84e-0a5f2196bf1c" >
+		<http:listener doc:name="Listener" doc:id="92cdee7a-f2fa-44d5-a334-0c326cf622f0" config-ref="HTTP_Listener_config" path="/scatter" allowedMethods="GET"/>
+		<ee:transform doc:name="Transform Message" doc:id="32f2f5fd-22a3-42f4-a7b4-20ccbfecb9e6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[1,2,3]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="22d44d7f-1a76-4279-ad1a-51db36a05118" message="#[payload]"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="4c5727e5-283a-4819-b04b-98af0aacfc08" target="scatter">
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="989d9092-baab-411e-86ae-48e7e3236392" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+(vars.scatter pluck$).payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="4efa86f8-cba8-418c-9102-c82d78e9eb7a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+(vars.scatter pluck$).payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+			<route >
+				<ee:transform doc:name="Transform Message" doc:id="31b6dd2f-b7b1-4b7f-80c0-f669f299be77" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+(vars.scatter pluck$).payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="e760bd1b-d663-4d64-a83f-0f663544edc8" message="#[payload]"/>
+	</flow>
+</mule>
